@@ -15,12 +15,12 @@ const dogSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: ["Small", "Big", "Large", "Medium"],
-    age: {
-      type: Number,
-      required: true,
-      min: [1, "The dog's age must be at least 1 year"],
-      max: [20, "If your dog is older than 20, it's not a dog."],
-    },
+  },
+  age: {
+    type: Number,
+    required: true,
+    min: [1, "The dog's age must be at least 1 year"],
+    max: [20, "If your dog is older than 20, it's not a dog."],
   },
 });
 
