@@ -56,6 +56,12 @@ const updateDog = async (req, res) => {
     const updatedDog = await Dog.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
+    if (!updatedDog) {
+      return res.status(404).json({
+        message: "Dog not found",
+        success: false,
+      });
+    }
     res.status(200).json({
       message: `${req.method} - Dog Update request made`,
       success: true,
