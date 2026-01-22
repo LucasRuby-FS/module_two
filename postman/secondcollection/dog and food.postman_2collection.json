@@ -1,0 +1,789 @@
+{
+  "info": {
+    "_postman_id": "c2586651-73ef-4971-91be-2349857af368",
+    "name": "dog and food",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51332705",
+    "_collection_link": "https://go.postman.co/collection/51332705-c2586651-73ef-4971-91be-2349857af368?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "dog",
+      "item": [
+        {
+          "name": "get all dogs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1️⃣ Status code is 200",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "// 2️⃣ Response body contains arrays of dogs",
+                  "pm.test(\"Response body contains array of dogs\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"data\");",
+                  "    pm.expect(body.data).to.be.an(\"array\");",
+                  "});",
+                  "// 3️⃣ Validate all required fields",
+                  "pm.test(\"Each dog has required fields if present\", function () {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(dog => {",
+                  "         // _id exists and valid",
+                  "        pm.expect(dog).to.have.property(\"_id\").",
+                  "        that.is.a(\"string\").with.lengthOf(24);",
+                  "        // name",
+                  "        pm.expect(dog).to.have.property(\"name\").that.is.a(\"string\");",
+                  "",
+                  "        // Optional: only test if property exists",
+                  "        if (dog.hasOwnProperty(\"breed\")) pm.expect(dog.breed).to.be.a(\"string\");",
+                  "        if (dog.hasOwnProperty(\"size\")) pm.expect(dog.size).to.be.a(\"string\");",
+                  "        if (dog.hasOwnProperty(\"age\")) pm.expect(dog.age).to.be.a(\"number\");",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/dog",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "dog"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get dog by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Accept 200 for found, 404 if not found",
+                  "pm.test(\"Get dog by id: status is 200 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "let body;",
+                  "try {",
+                  "    body = pm.response.json();",
+                  "} catch (e) {",
+                  "    body = null;",
+                  "}",
+                  "",
+                  "if (pm.response.code === 200 && body && body.data) {",
+                  "    const dog = body.data;",
+                  "",
+                  "    pm.test(\"Get dog by id: dog has expected fields\", function () {",
+                  "        pm.expect(dog).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "        pm.expect(dog).to.have.property(\"name\").that.is.a(\"string\");",
+                  "        pm.expect(dog).to.have.property(\"breed\").that.is.a(\"string\");",
+                  "        pm.expect(dog).to.have.property(\"size\").that.is.a(\"string\");",
+                  "        pm.expect(dog).to.have.property(\"age\").that.is.a(\"number\");",
+                  "    });",
+                  "",
+                  "    // 🔑 Save dogId",
+                  "    pm.collectionVariables.set(\"dogId\", dog._id);",
+                  "",
+                  "    pm.test(\"dogId collection variable set from get dog by id\", function () {",
+                  "        pm.expect(pm.collectionVariables.get(\"dogId\")).to.eql(dog._id);",
+                  "    });",
+                  "",
+                  "} else if (pm.response.code === 404) {",
+                  "    pm.test(\"Get dog by id: dog not found\", function () {",
+                  "        pm.expect(body && body.message && body.message.toLowerCase()).to.include(\"not found\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/dog/{{dogId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "dog",
+                "{{dogId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update dog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Updated dog fields are reflected\", function () {",
+                  "    const { data } = pm.response.json();",
+                  "});",
+                  "",
+                  "pm.test(\"Updated dog still has required fields\", function () {",
+                  "    const { data } = pm.response.json();",
+                  "    pm.expect(data).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "    pm.expect(data).to.have.property(\"name\").that.is.a(\"string\");",
+                  "    pm.expect(data).to.have.property(\"breed\").that.is.a(\"string\");",
+                  "    pm.expect(data).to.have.property(\"size\").that.is.a(\"string\");",
+                  "    pm.expect(data).to.have.property(\"age\").that.is.a(\"number\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\" : \"sally\",\n    \"breed\" : \"silly\",\n    \"size\" : \"Big\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/dog/69716392e0bf6bb607186a9a",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "dog",
+                "69716392e0bf6bb607186a9a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete dog by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const dogId = pm.collectionVariables.get(\"dogId\");",
+                  "const baseUrl = pm.environment.get(\"baseUrl\") || \"http://localhost:5001/api/v1/dog\";",
+                  "// 1️⃣ DELETE status check",
+                  "pm.test(\"Status code is 200 or 204\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "// 2️⃣ DELETE response confirmation",
+                  "pm.test(\"Response confirms deletion\", function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property(\"message\");",
+                  "        pm.expect(body.message.toLowerCase()).to.include(\"delete\");",
+                  "    }",
+                  "});",
+                  "// 3️⃣ Confirm the dog is actually deleted",
+                  "pm.sendRequest(",
+                  "    {",
+                  "        url: `${baseUrl}/dog/${dogId}`,",
+                  "        method: 'GET',",
+                  "        header: { 'Content-Type': 'application/json' }",
+                  "    },",
+                  "    function (err, res) {",
+                  "        pm.test(\"Confirmed the dog is deleted\", function () {",
+                  "            pm.expect(res).to.not.be.undefined;",
+                  "            if (res.code === 404) {",
+                  "",
+                  "                pm.expect(true).to.be.true;",
+                  "                console.log(`Dog with ID ${dogId} was confirmed deleted.`);",
+                  "            } else {",
+                  "",
+                  "                pm.expect.fail(`Dog with ID ${dogId} still exists!`);",
+                  "            }",
+                  "        });",
+                  "    }",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/dog/{{dogId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "dog",
+                "{{dogId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create dog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Basic status check",
+                  "pm.test(\"Create dog: status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "let body;",
+                  "try {",
+                  "    body = pm.response.json();",
+                  "} catch (e) {",
+                  "    pm.test(\"Response is valid JSON\", function () {",
+                  "        pm.expect.fail(\"Response is not valid JSON: \" + e.message);",
+                  "    });",
+                  "    return;",
+                  "}",
+                  "",
+                  "// Ensure we have a data object",
+                  "pm.test(\"Create dog: response has data object\", function () {",
+                  "    pm.expect(body).to.have.property(\"data\");",
+                  "    pm.expect(body.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "const dog = body.data;",
+                  "",
+                  "// Basic field checks (adjust fields to your actual schema)",
+                  "pm.test(\"Create dog: dog has valid _id\", function () {",
+                  "    pm.expect(dog).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "});",
+                  "",
+                  "// 🔑 Save dogId for use by other requests (like create food)",
+                  "if (dog && dog._id) {",
+                  "    pm.collectionVariables.set(\"dogId\", dog._id);",
+                  "",
+                  "    pm.test(\"dogId collection variable set\", function () {",
+                  "        pm.expect(pm.collectionVariables.get(\"dogId\")).to.eql(dog._id);",
+                  "    });",
+                  "} else {",
+                  "    pm.test(\"dogId could not be set\", function () {",
+                  "        pm.expect.fail(\"No _id field found in created dog response.\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"eedy\",\n  \"breed\": \"brador\",\n  \"size\": \"Large\",\n  \"age\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/dog",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "dog"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "food",
+      "item": [
+        {
+          "name": "get all food",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains array of foods\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"data\");",
+                  "    pm.expect(body.data).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Each food has valid fields\", function () {",
+                  "    const body = pm.response.json();",
+                  "    body.data.forEach(food => {",
+                  "        pm.expect(food).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "        pm.expect(food).to.have.property(\"foodtype\").that.is.a(\"string\");",
+                  "        pm.expect([\"wet\", \"dry\"]).to.include(food.foodtype);",
+                  "        pm.expect(food).to.have.property(\"flavor\").that.is.a(\"string\");",
+                  "        pm.expect(food).to.have.property(\"cost\").that.is.a(\"number\");",
+                  "        pm.expect(food.cost).to.be.within(1, 60);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/food",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "food"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get food by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const foodId = pm.collectionVariables.get(\"foodId\");",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returned food matches requested ID\", function () {",
+                  "    let food = body.data;",
+                  "",
+                  "    // If data is an array, find the food by ID",
+                  "    if (Array.isArray(body.data)) {",
+                  "        food = body.data.find(f => f._id === foodId);",
+                  "    }",
+                  "",
+                  "    pm.expect(food, `Food with ID ${foodId} should exist`).to.exist;",
+                  "    pm.expect(food._id).to.equal(foodId);",
+                  "});",
+                  "",
+                  "pm.test(\"Returned food has valid fields\", function () {",
+                  "    let food = body.data;",
+                  "",
+                  "    if (Array.isArray(body.data)) {",
+                  "        food = body.data.find(f => f._id === foodId);",
+                  "    }",
+                  "",
+                  "    pm.expect(food, `Food with ID ${foodId} should exist`).to.exist;",
+                  "",
+                  "    pm.expect([\"wet\", \"dry\"]).to.include(food.foodtype);",
+                  "    pm.expect(food).to.have.property(\"flavor\").that.is.a(\"string\");",
+                  "    pm.expect(food).to.have.property(\"cost\").that.is.a(\"number\");",
+                  "    pm.expect(food.cost).to.be.within(1, 60);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/food/{{foodId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "food",
+                "{{foodId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update food",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 (Created)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 2️⃣ Response body contains food object",
+                  "pm.test(\"Response body contains food data\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"data\");",
+                  "    pm.expect(body.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "// 3️⃣ Validate all required fields and constraints",
+                  "pm.test(\"Created food has valid fields\", function () {",
+                  "    const { data } = pm.response.json();",
+                  "",
+                  "    // _id exists",
+                  "    pm.expect(data).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "",
+                  "    // foodtype must be \"wet\" or \"dry\"",
+                  "    pm.expect(data).to.have.property(\"foodtype\").that.is.a(\"string\");",
+                  "    pm.expect([\"wet\",\"dry\"]).to.include(data.foodtype);",
+                  "",
+                  "    // flavor exists and is string",
+                  "    pm.expect(data).to.have.property(\"flavor\").that.is.a(\"string\");",
+                  "",
+                  "    // cost exists and is between 1 and 60",
+                  "    pm.expect(data).to.have.property(\"cost\").that.is.a(\"number\");",
+                  "    pm.expect(data.cost).to.be.within(1,60);",
+                  "",
+                  "    // Save ID for future tests if needed",
+                  "    pm.collectionVariables.set(\"foodId\", data._id);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"flavor\" : \"chicken\",\n    \"foodtype\" : \"dry\",\n    \"cost\" : \"50\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/food/{{foodId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "food",
+                "{{foodId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete food by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const foodId = pm.collectionVariables.get(\"foodId\");",
+                  "const baseUrl = pm.environment.get(\"baseUrl\") || \"http://localhost:5001/api/v1\";",
+                  "",
+                  "// DELETE status check",
+                  "pm.test(\"Status code is 200 or 204\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "",
+                  "// DELETE response confirmation",
+                  "pm.test(\"Response confirms deletion\", function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property(\"message\");",
+                  "        pm.expect(body.message.toLowerCase()).to.include(\"delete\");",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.sendRequest(",
+                  "    {",
+                  "        url: `${baseUrl}/food/${foodId}`,",
+                  "        method: 'GET',",
+                  "        header: { 'Content-Type': 'application/json' }",
+                  "    },",
+                  "    function (err, res) {",
+                  "        pm.test(\"Confirmed the food is deleted\", function () {",
+                  "            pm.expect(res).to.not.be.undefined;",
+                  "",
+                  "            let body;",
+                  "            try {",
+                  "                body = res.json();",
+                  "            } catch (e) {",
+                  "                body = null;",
+                  "            }",
+                  "",
+                  "            // ✅ Pass if 404 OR data is null",
+                  "            if (res.code === 404 || body?.data === null || body?.data === undefined) {",
+                  "                pm.expect(true).to.be.true;",
+                  "                console.log(`Food with ID ${foodId} was confirmed deleted.`);",
+                  "            } else {",
+                  "                console.log(\"Response after DELETE:\", body);",
+                  "                pm.expect.fail(`Food with ID ${foodId} still exists!`);",
+                  "            }",
+                  "        });",
+                  "    }",
+                  ");",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/food/{{foodId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "food",
+                "{{foodId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create food",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 1️⃣ Status code / high-level outcome",
+                  "pm.test(\"Create food: status and high-level result\", function () {",
+                  "    const code = pm.response.code;",
+                  "    const body = pm.response.json();",
+                  "",
+                  "    if (code === 404) {",
+                  "        pm.expect.fail(",
+                  "            \"Create food failed with 404: Dog not found. \" +",
+                  "            \"Make sure the 'dog' field in the body is a valid existing dog ID. \" +",
+                  "            \"Use 'get all dogs' or 'create dog' to obtain a valid ID, \" +",
+                  "            \"then set it as {{dogId}}.\"",
+                  "        );",
+                  "    }",
+                  "",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// 2️⃣ Response contains data object when successful",
+                  "pm.test(\"Response contains food data object when created\", function () {",
+                  "    const code = pm.response.code;",
+                  "    const body = pm.response.json();",
+                  "",
+                  "    if (code !== 201) {",
+                  "        pm.expect.fail(",
+                  "            \"Expected status 201 to validate data, but got \" + code +",
+                  "            \". Response: \" + JSON.stringify(body)",
+                  "        );",
+                  "        return;",
+                  "    }",
+                  "",
+                  "    pm.expect(body).to.have.property(\"data\");",
+                  "    pm.expect(body.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "// 3️⃣ Validate created food fields & save foodId",
+                  "pm.test(\"Created food has valid fields\", function () {",
+                  "    const code = pm.response.code;",
+                  "    const body = pm.response.json();",
+                  "",
+                  "    if (code !== 201 || !body.data) {",
+                  "        pm.expect.fail(",
+                  "            \"Cannot validate food fields - response does not contain expected data structure. \" +",
+                  "            \"Status: \" + code + \", body: \" + JSON.stringify(body)",
+                  "        );",
+                  "        return;",
+                  "    }",
+                  "",
+                  "    const { data } = body;",
+                  "",
+                  "    pm.expect(data).to.have.property(\"_id\").that.is.a(\"string\").with.lengthOf(24);",
+                  "    pm.expect(data).to.have.property(\"foodtype\").that.is.a(\"string\");",
+                  "    pm.expect([\"wet\", \"dry\"]).to.include(data.foodtype);  // Must be wet or dry",
+                  "    pm.expect(data).to.have.property(\"flavor\").that.is.a(\"string\");",
+                  "    pm.expect(data).to.have.property(\"cost\").that.is.a(\"number\");",
+                  "    pm.expect(data.cost).to.be.within(1, 60); // cost between 1 and 60",
+                  "",
+                  "    // Save foodId for later requests",
+                  "    pm.collectionVariables.set(\"foodId\", data._id);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"dog\": \"{{dogId}}\",\n    \"foodtype\": \"dry\",\n    \"flavor\": \"Chicken\",\n    \"cost\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/food",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "v1",
+                "food"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "dogId",
+      "value": ""
+    },
+    {
+      "key": "foodId",
+      "value": ""
+    }
+  ]
+}

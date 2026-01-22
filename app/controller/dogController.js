@@ -1,17 +1,18 @@
 const Dog = require("../model/Dog");
-
+const Messages = require("../../messages/messages");
+const mongoose = require("mongoose");
 const getAllDog = async (req, res) => {
   try {
-    const dog = await Dog.find({});
+    const dog = await Dog.find({}).select("-__v");
     res.status(200).json({
-      message: `${req.method} - All Dogs Request Made`,
       success: true,
+      message: Messages.DOG_LIST,
       data: dog,
     });
   } catch (error) {
-    res.status(404).json({
-      message: `Error from the Dog API with ${req.method}`,
+    res.status(500).json({
       success: false,
+      message: Messages.SERVER_ERROR,
       error: error.message,
     });
   }
@@ -19,16 +20,27 @@ const getAllDog = async (req, res) => {
 
 const getDogById = async (req, res) => {
   try {
-    const dog = await Dog.findById(req.params.id);
-    res.status(200).json({
-      message: `${req.method} - Dog Id request made`,
-      success: true,
-      data: dog,
-    });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: Messages.INVALID_ID,
+      });
+    }
+    const dogs = await Dog.findById(id).select("-__v");
+    if (!dogs) {
+      return res.status(404).json({
+        success: false,
+        message: Messages.DOG_NOT_FOUND,
+      });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: Messages.DOG_FOUND, data: dogs });
   } catch (error) {
-    res.status(404).json({
-      message: `Error from the Dog API Get by Id ${req.method}`,
+    res.status(500).json({
       success: false,
+      message: Messages.SERVER_ERROR,
       error: error.message,
     });
   }
@@ -38,14 +50,14 @@ const createDog = async (req, res) => {
   try {
     const dog = await Dog.create(req.body);
     res.status(201).json({
-      message: `Accepted Creation From the Dog API with ${req.method}`,
+      message: Messages.DOG_CREATED,
       success: true,
       data: dog,
     });
   } catch (error) {
-    res.status(404).json({
-      message: `Error from the Dog API Creation request ${req.method}`,
+    res.status(500).json({
       success: false,
+      message: Messages.SERVER_ERROR,
       error: error.message,
     });
   }
@@ -53,24 +65,33 @@ const createDog = async (req, res) => {
 
 const updateDog = async (req, res) => {
   try {
-    const updatedDog = await Dog.findByIdAndUpdate(req.params.id, req.body, {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: Messages.INVALID_ID });
+    }
+
+    const updatedDog = await Dog.findByIdAndUpdate(id, req.body, {
       new: true,
-    });
+      runValidators: true,
+    }).select("-__v");
+
     if (!updatedDog) {
       return res.status(404).json({
-        message: "Dog not found",
+        message: Messages.DOG_NOT_FOUND,
         success: false,
       });
     }
     res.status(200).json({
-      message: `${req.method} - Dog Update request made`,
       success: true,
+      message: Messages.DOG_UPDATED,
       data: updatedDog,
     });
   } catch (error) {
-    res.status(404).json({
-      message: `Error with the Update Dog ${req.method}`,
+    res.status(500).json({
       success: false,
+      message: Messages.SERVER_ERROR,
       error: error.message,
     });
   }
@@ -78,16 +99,29 @@ const updateDog = async (req, res) => {
 
 const deleteDog = async (req, res) => {
   try {
-    const deletedDog = await Dog.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: Messages.INVALID_ID });
+    }
+    const deletedDog = await Dog.findByIdAndDelete(id).select("-__v");
+
+    if (!deletedDog) {
+      return res.status(404).json({
+        success: false,
+        message: Messages.DOG_NOT_FOUND,
+      });
+    }
     res.status(200).json({
-      message: `${req.method} - Deleted Dog request made`,
+      message: Messages.DOG_DELETED,
       success: true,
       data: deletedDog,
     });
   } catch (error) {
-    res.status(404).json({
-      message: `Error from the Delete Dog API route with ${req.method}`,
+    res.status(500).json({
       success: false,
+      message: Messages.SERVER_ERROR,
       error: error.message,
     });
   }
