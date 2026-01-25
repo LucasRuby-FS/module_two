@@ -6,7 +6,6 @@ const foodSchema = new mongoose.Schema({
     ref: "Dog",
     required: true,
   },
-
   foodtype: {
     type: String,
     required: true,

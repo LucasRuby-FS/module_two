@@ -1,8 +1,7 @@
 const Food = require("../model/Food");
-const Dog = require("../model/Dog");
 const Messages = require("../../messages/messages");
 const mongoose = require("mongoose");
-
+const Dog = require("../model/Dog");
 const getAllFood = async (req, res) => {
   try {
     const food = await Food.find({})
@@ -32,6 +31,7 @@ const getFoodById = async (req, res) => {
         .status(400)
         .json({ success: false, message: Messages.INVALID_ID });
     }
+    //populate foodlist
     const food = await Food.findById(id)
       .populate("dog", "name breed age size -_id")
       .select("-__v");
@@ -71,6 +71,9 @@ const createFood = async (req, res) => {
         .json({ success: false, message: Messages.DOG_NOT_FOUND });
     }
     const food = await Food.create(req.body);
+
+    dogExists.foodList.push(food._id);
+    await dogExists.save();
     res.status(201).json({
       success: true,
       message: Messages.FOOD_CREATED,
@@ -84,6 +87,7 @@ const createFood = async (req, res) => {
     });
   }
 };
+
 const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
@@ -116,6 +120,7 @@ const updateFood = async (req, res) => {
     });
   }
 };
+
 const deleteFood = async (req, res) => {
   try {
     const { id } = req.params;

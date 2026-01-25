@@ -21,22 +21,29 @@ const getAllDog = async (req, res) => {
 const getDogById = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: Messages.INVALID_ID,
       });
     }
-    const dogs = await Dog.findById(id).select("-__v");
-    if (!dogs) {
+    const dog = await Dog.findById(id)
+      .populate("foodList", "foodtype flavor cost -_id")
+      .select("-__v");
+
+    if (!dog) {
       return res.status(404).json({
         success: false,
         message: Messages.DOG_NOT_FOUND,
       });
     }
-    res
-      .status(200)
-      .json({ success: true, message: Messages.DOG_FOUND, data: dogs });
+
+    res.status(200).json({
+      success: true,
+      message: Messages.DOG_FOUND,
+      data: dog,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -66,6 +73,7 @@ const createDog = async (req, res) => {
 const updateDog = async (req, res) => {
   try {
     const { id } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)

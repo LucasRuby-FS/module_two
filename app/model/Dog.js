@@ -22,6 +22,13 @@ const dogSchema = new mongoose.Schema({
     min: [1, "The dog's age must be at least 1 year"],
     max: [20, "If your dog is older than 20, it's not a dog."],
   },
+  foodList: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Food",
+      required: true,
+    },
+  ],
 });
 
 module.exports = mongoose.model("Dog", dogSchema);
