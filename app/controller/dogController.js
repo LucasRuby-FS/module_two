@@ -3,10 +3,46 @@ const Messages = require("../../messages/messages");
 const mongoose = require("mongoose");
 const getAllDog = async (req, res) => {
   try {
-    const dog = await Dog.find({}).select("-__v");
+    const { breed, size, minAge, maxAge, excludeFields, sortBy, page, limit } =
+      req.query;
+    //filtering
+    //filter by breed and size, age range, excluding filtering foodlist, sort by age, page 2, 5 per page:
+    //GET /api/v1/dogs?breed=Labrador,Beagle&size=Medium,Small&minAge=2&maxAge=10&excludeFields=foodList&sortBy=age&page=2&limit=5
+    //filters breed in [Labrador, Beagle], size in [Medium,Small], 2 <= age <= 10
+    //exlcudes filtering foodlist field
+    //sorts by age
+    //pagination: page 2, 5 per page.
+    let filter = {};
+    if (breed) filter.breed = { $in: breed.split(",") };
+    if (size) filter.size = { $in: size.split(",") };
+    if (minAge || maxAge) filter.age = {};
+    if (minAge) filter.age.$gte = parseInt(minAge);
+    if (maxAge) filter.age.$lte = parseInt(maxAge);
+
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * pageSize;
+
+    const selectFields = excludeFields
+      ? "-" + excludeFields.split(",").join(" -")
+      : "-__v";
+
+    const sortOptions = sortBy || "name";
+    //usable without filters, first page, 10 per page
+    //GET /api/v1/dogs
+    //Returns first 10 dogs sorted by name.
+    const dog = await Dog.find(filter)
+      .populate("foodList", "foodtype flavor cost -_id")
+      .select(selectFields)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(pageSize);
+
     res.status(200).json({
       success: true,
       message: Messages.DOG_LIST,
+      count: dog.length,
+      page: pageNumber,
       data: dog,
     });
   } catch (error) {
@@ -55,7 +91,12 @@ const getDogById = async (req, res) => {
 
 const createDog = async (req, res) => {
   try {
-    const dog = await Dog.create(req.body);
+    const dogData = {
+      ...req.body,
+      foodList: req.body.foodList || [],
+    };
+
+    const dog = await Dog.create(dogData);
     res.status(201).json({
       message: Messages.DOG_CREATED,
       success: true,

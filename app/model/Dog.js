@@ -26,7 +26,7 @@ const dogSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Food",
-      required: true,
+      required: false,
     },
   ],
 });
