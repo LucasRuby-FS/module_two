@@ -109,25 +109,30 @@ const getFoodById = async (req, res) => {
 //EX POST /api/v1/food
 const createFood = async (req, res) => {
   try {
-    const { dog: dogId } = req.body;
+    const { dog: dogId, ...foodData } = req.body;
+    let food;
     // Validate dog ID
-    if (!mongoose.Types.ObjectId.isValid(dogId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: Messages.INVALID_ID });
+    if (dogId) {
+      if (!mongoose.Types.ObjectId.isValid(dogId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: Messages.INVALID_ID });
+      }
+      // Check if dog exists
+      const dogExists = await Dog.findById(dogId);
+      if (!dogExists) {
+        return res
+          .status(404)
+          .json({ success: false, message: Messages.DOG_NOT_FOUND });
+      }
+      // Create food item
+      food = await Food.create({ ...foodData, dog: dogId });
+      // Add food reference to dog's foodLis
+      dogExists.foodList.push(food._id);
+      await dogExists.save();
+    } else {
+      food = await Food.create(foodData);
     }
-    // Check if dog exists
-    const dogExists = await Dog.findById(dogId);
-    if (!dogExists) {
-      return res
-        .status(404)
-        .json({ success: false, message: Messages.DOG_NOT_FOUND });
-    }
-    // Create food item
-    const food = await Food.create(req.body);
-    // Add food reference to dog's foodLis
-    dogExists.foodList.push(food._id);
-    await dogExists.save();
     //Success
     res.status(201).json({
       success: true,

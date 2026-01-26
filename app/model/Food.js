@@ -4,7 +4,7 @@ const foodSchema = new mongoose.Schema({
   dog: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Dog",
-    required: true,
+    required: false,
   },
   foodtype: {
     type: String,
